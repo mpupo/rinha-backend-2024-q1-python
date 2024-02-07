@@ -4,6 +4,6 @@ from src.rinha.domain.enums.operation_type import OperationTypes
 
 
 class NewTransactionRequest(BaseModel):
-    value = Field(int, alias="valor")
-    description = Field(str, alias="descricao")
-    type = Field(OperationTypes, alias="tipo")
+    value: int = Field( alias="valor")
+    description: str = Field(alias="descricao")
+    type: OperationTypes = Field(alias="tipo")
