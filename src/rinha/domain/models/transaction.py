@@ -10,3 +10,4 @@ class Transaction(BaseModel):
     type: OperationTypes
     description: str
     created_at: datetime | None = None
+    value: int

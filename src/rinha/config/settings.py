@@ -17,7 +17,7 @@ class PostgresSettings(BaseModel):
 
 class Settings(BaseSettings):
     project_name: str = "rinha-backend-2024-q1-mpupo"
-    echo_sql: bool = True
+    echo_sql: bool | str = 'debug'
     db: PostgresSettings = PostgresSettings()
     debug_logs: bool = True
 

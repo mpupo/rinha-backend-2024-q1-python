@@ -22,3 +22,8 @@ class TransactionsDTO(BaseModel):
 class QueryTransactionsResponse(BaseModel):
     balance: BalanceDTO = Field(alias="saldo")
     recent_transactions: Tuple[TransactionsDTO] = Field(alias="ultimas_transacoes")
+
+
+class NewTransactionResponse(BaseModel):
+    limit: int = Field(alias="limite")
+    balance: int = Field(alias="saldo")

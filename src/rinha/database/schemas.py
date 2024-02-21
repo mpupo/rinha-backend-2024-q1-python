@@ -9,6 +9,7 @@ class TransactionBaseSchema(BaseModel):
     cliente_id: int
     tipo: OperationTypes
     descricao: str
+    valor: int
 
     @classmethod
     def from_domain(cls, transaction: Transaction):
@@ -18,6 +19,7 @@ class TransactionBaseSchema(BaseModel):
             tipo=transaction.type,
             descricao=transaction.description,
             realizada_em=transaction.created_at,
+            valor=transaction.value
         )
 
     def to_domain(self):
@@ -27,6 +29,7 @@ class TransactionBaseSchema(BaseModel):
             type=self.tipo,
             description=self.descricao,
             created_at=self.realizada_em,
+            value=self.valor
         )
 
 

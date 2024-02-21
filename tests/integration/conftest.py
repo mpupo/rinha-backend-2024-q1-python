@@ -93,7 +93,7 @@ async def async_db() -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture
 def test_app(async_db: AsyncSession) -> FastAPI:
     """Create a test app with overridden dependencies."""
-    actual_app.dependency_overrides[get_db_session] = lambda: async_db
+    #actual_app.dependency_overrides[get_db_session] = lambda: async_db
     return actual_app
 
 
