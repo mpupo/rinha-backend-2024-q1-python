@@ -5,4 +5,6 @@ from src.rinha.domain.enums import OperationTypes
 
 
 class NewTransactionRequestModelFactory(ModelFactory[NewTransactionRequest]):
-    type = Use(ModelFactory.__random__.choice, [member.value for member in OperationTypes])
+    type = Use(
+        ModelFactory.__random__.choice, [member.value for member in OperationTypes]
+    )

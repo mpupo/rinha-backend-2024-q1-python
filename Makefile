@@ -41,6 +41,7 @@ all: lint test
 .PHONY: clean
 clean:
 	rm -rf `find . -name __pycache__`
+	rm -rf `find . -name .pytest_cache`
 	rm -f `find . -type f -name '*.py[co]' `
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `

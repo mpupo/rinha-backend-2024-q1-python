@@ -1,36 +1,15 @@
 import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from src.rinha.domain.enums.operation_type import OperationTypes
-from src.rinha.domain.models.transaction import Transaction
 
 
 class TransactionBaseSchema(BaseModel):
-    cliente_id: int
-    tipo: OperationTypes
-    descricao: str
-    valor: int
-
-    @classmethod
-    def from_domain(cls, transaction: Transaction):
-        return cls(
-            id=transaction.id,
-            cliente_id=transaction.client_id,
-            tipo=transaction.type,
-            descricao=transaction.description,
-            realizada_em=transaction.created_at,
-            valor=transaction.value
-        )
-
-    def to_domain(self):
-        return Transaction(
-            id=self.id,
-            client_id=self.cliente_id,
-            type=self.tipo,
-            description=self.descricao,
-            created_at=self.realizada_em,
-            value=self.valor
-        )
+    model_config = ConfigDict(from_attributes=True)
+    client_id: int
+    type: OperationTypes
+    description: str
+    value: int
 
 
 class TransactionCreateSchema(TransactionBaseSchema):
@@ -38,8 +17,20 @@ class TransactionCreateSchema(TransactionBaseSchema):
 
 
 class TransactionSchema(TransactionBaseSchema):
-    id: int
-    realizada_em: datetime.datetime
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True
+    id: int
+    created_at: datetime.datetime
+
+
+class ClientBaseSchema(BaseModel):
+    limit: int
+
+
+class ClienteUpdateSchema(BaseModel):
+    balance: int
+
+
+class ClientSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int

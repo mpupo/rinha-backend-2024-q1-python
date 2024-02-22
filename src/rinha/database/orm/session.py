@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import declarative_base
 
 
 # https://medium.com/@tclaitken/setting-up-a-fastapi-app-with-async-sqlalchemy-2-0-pydantic-v2-e6c540be4308
@@ -54,7 +53,9 @@ class DatabaseSessionManager:
             await session.close()
 
 
-sessionmanager = DatabaseSessionManager(settings.db.db_url, {"echo": settings.echo_sql, "future": True})
+sessionmanager = DatabaseSessionManager(
+    settings.db.db_url, {"echo": settings.echo_sql, "future": True}
+)
 
 
 async def get_db_session() -> AsyncIterator[AsyncSession]:

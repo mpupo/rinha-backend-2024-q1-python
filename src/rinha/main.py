@@ -1,16 +1,16 @@
 import logging
 import sys
-from contextlib import asynccontextmanager
 
 import uvicorn
 from src.rinha.api.routers.clientes import router as clientes_router
 from src.rinha.config.settings import settings
-from src.rinha.database.orm.session import sessionmanager
 from fastapi import FastAPI
 
 from src.rinha.api.models.healthcheck import HealthCheck
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG if settings.debug_logs else logging.INFO)
+logging.basicConfig(
+    stream=sys.stdout, level=logging.DEBUG if settings.debug_logs else logging.INFO
+)
 
 
 # @asynccontextmanager
@@ -26,7 +26,10 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG if settings.debug_log
 
 
 # app = FastAPI(lifespan=lifespan, title=settings.project_name, docs_url="/api/docs", debug=settings.debug_logs)
-app = FastAPI(title=settings.project_name, docs_url="/api/docs", debug=settings.debug_logs)
+app = FastAPI(
+    title=settings.project_name, docs_url="/api/docs", debug=settings.debug_logs
+)
+logging.debug(f"Settings: {settings.db.db_url}")
 
 
 @app.get("/", response_model=HealthCheck, tags=["status"])

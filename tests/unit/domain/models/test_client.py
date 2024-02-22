@@ -17,4 +17,4 @@ class TestClientModel:
         sut = Client(limit=1000, balance=1000)
 
         with pytest.raises(ValueError):
-            sut.update_balance(10000,operation_type=OperationTypes.DEBIT)
+            sut.update_balance(10000, operation_type=OperationTypes.DEBIT)

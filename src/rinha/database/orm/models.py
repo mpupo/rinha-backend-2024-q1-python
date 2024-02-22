@@ -1,7 +1,6 @@
 # Create engine
 import datetime
-from sqlalchemy import create_engine
-from sqlalchemy import String, ForeignKey, TIMESTAMP, func, Enum, Table, Column, Integer
+from sqlalchemy import String, ForeignKey, TIMESTAMP, func, Enum
 from sqlalchemy.orm import (
     relationship,
     DeclarativeBase,
@@ -33,24 +32,29 @@ class Base(DeclarativeBase):
 class ClientModel(Base):
     __tablename__ = "clientes"
 
-    limite: Mapped[int]
-    saldo: Mapped[int] = 0
+    limit: Mapped[int] = mapped_column("limite")
+    balance: Mapped[int] = mapped_column("saldo", default=0)
 
-    transacoes: Mapped[list["TransactionModel"]] = relationship("TransactionModel", lazy="selectin", back_populates="client")
+    transactions: Mapped[list["TransactionModel"]] = relationship(
+        "TransactionModel", lazy="selectin", back_populates="client"
+    )
 
 
 class TransactionModel(Base):
     __tablename__ = "transacoes"
 
-    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id"))
-    tipo: Mapped[OperationTypes]
-    valor: Mapped[int]
-    descricao: Mapped[str] = mapped_column(String(40))
-    realizada_em: Mapped[datetime.datetime] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=func.now()
+    client_id: Mapped[int] = mapped_column("cliente_id", ForeignKey("clientes.id"))
+    type: Mapped[OperationTypes] = mapped_column("tipo")
+    value: Mapped[int] = mapped_column("valor")
+    description: Mapped[str] = mapped_column("descricao", String(40))
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        "realizada_em", TIMESTAMP(timezone=True), server_default=func.now()
     )
 
-    client: Mapped["ClientModel"] = relationship("ClientModel", lazy="selectin", back_populates="transacoes")
+    client: Mapped["ClientModel"] = relationship(
+        "ClientModel", lazy="selectin", back_populates="transactions"
+    )
+
 
 # DATABASE_URL = "postgresql://username:password@localhost/db_name"
 # engine = create_engine(DATABASE_URL)
