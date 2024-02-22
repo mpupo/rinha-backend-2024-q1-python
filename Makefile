@@ -1,35 +1,18 @@
 .DEFAULT_GOAL := all
-sources = pytest_examples tests example
+sources = src tests
 
 .PHONY: install
 install:
-	pip install -U pip
-	pip install -r requirements/all.txt
-	pip install -e .
+	poetry install
 	pre-commit install
-
-.PHONY: refresh-lockfiles
-refresh-lockfiles:
-	find requirements/ -name '*.txt' ! -name 'all.txt' -type f -delete
-	make update-lockfiles
-
-.PHONY: update-lockfiles
-update-lockfiles:
-	@echo "Updating requirements/*.txt files using pip-compile"
-	pip-compile -q --resolver backtracking -o requirements/linting.txt requirements/linting.in
-	pip-compile -q --resolver backtracking -o requirements/testing.txt requirements/testing.in
-	pip-compile -q --resolver backtracking -o requirements/pyproject.txt pyproject.toml
-	pip install --dry-run -r requirements/all.txt
 
 .PHONY: format
 format:
-	black $(sources)
-	ruff $(sources) --fix --exit-zero
+	ruff format $(sources)
 
 .PHONY: lint
 lint:
-	black $(sources) --check --diff
-	ruff $(sources)
+	ruff $(sources) --fix --exit-zero
 
 .PHONY: test
 test:
@@ -52,3 +35,8 @@ clean:
 	rm -f .coverage
 	rm -f .coverage.*
 	rm -rf build
+
+.PHONY: docker-test
+docker-test:
+	docker-compose down --rmi local
+	docker-compose up --build --force-recreate
