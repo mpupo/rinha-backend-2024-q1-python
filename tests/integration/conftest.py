@@ -27,11 +27,11 @@ root_dir = current_dir.parent.parent
 postgres = (
     PostgresContainer("postgres:latest", driver="psycopg2")
     .with_volume_mapping(
-        host=str(root_dir / "script.sql"),
+        host=str(root_dir / "postgresql/script.sql"),
         container="/docker-entrypoint-initdb.d/script.sql",
     )
     .with_volume_mapping(
-        host=str(root_dir / "postgresql.conf"),
+        host=str(root_dir / "postgresql/postgresql.conf"),
         container="/etc/postgresql/postgresql.conf",
     )
 )
@@ -44,9 +44,9 @@ def setup(request):
 
     def remove_container():
         logging.info("Removing PostgresSQL container!")
-        # postgres.stop()
+        postgres.stop()
 
-    # request.addfinalizer(remove_container)
+    request.addfinalizer(remove_container)
 
     settings.db.DB_HOST = postgres.get_container_host_ip()
     settings.db.DB_NAME = postgres.POSTGRES_DB

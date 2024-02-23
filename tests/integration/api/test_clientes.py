@@ -1,13 +1,16 @@
+import pytest
+import sqlalchemy as sa
+from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import status
+
 from src.rinha.database.orm.models import (
-    TransactionModel,
     ClientModel,
-)  # , client_transaction_association
+    TransactionModel,
+)
+
+# , client_transaction_association
 from tests.fixtures.factories import NewTransactionRequestModelFactory
-import sqlalchemy as sa
-import pytest
 
 pytestmark = pytest.mark.asyncio
 

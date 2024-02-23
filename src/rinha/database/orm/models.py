@@ -1,11 +1,11 @@
-# Create engine
 import datetime
-from sqlalchemy import String, ForeignKey, TIMESTAMP, func, Enum
+
+from sqlalchemy import TIMESTAMP, Enum, ForeignKey, String, func
 from sqlalchemy.orm import (
-    relationship,
     DeclarativeBase,
     Mapped,
     mapped_column,
+    relationship,
 )
 
 from src.rinha.domain.enums.operation_type import OperationTypes
@@ -54,13 +54,3 @@ class TransactionModel(Base):
     client: Mapped["ClientModel"] = relationship(
         "ClientModel", lazy="selectin", back_populates="transactions"
     )
-
-
-# DATABASE_URL = "postgresql://username:password@localhost/db_name"
-# engine = create_engine(DATABASE_URL)
-
-# # Create tables
-# Base.metadata.create_all(bind=engine)
-
-# Create session
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

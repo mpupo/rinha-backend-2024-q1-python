@@ -1,14 +1,15 @@
 import abc
 import logging
 from typing import Any, AsyncIterator
+
 from sqlalchemy.ext.asyncio import (
-    AsyncSession,
     AsyncEngine,
+    AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from src.rinha.config.settings import settings
 
+from src.rinha.config.settings import settings
 from src.rinha.database import repository
 
 

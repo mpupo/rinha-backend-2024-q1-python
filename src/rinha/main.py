@@ -2,34 +2,19 @@ import logging
 import sys
 
 import uvicorn
-from src.rinha.api.routers.clientes import router as clientes_router
-from src.rinha.config.settings import settings
 from fastapi import FastAPI
 
 from src.rinha.api.models.healthcheck import HealthCheck
+from src.rinha.api.routers.clientes import router as clientes_router
+from src.rinha.config.settings import settings
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.DEBUG if settings.debug_logs else logging.INFO
 )
 
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     """
-#     Function that handles startup and shutdown events.
-#     To understand more, read https://fastapi.tiangolo.com/advanced/events/
-#     """
-#     yield
-#     if sessionmanager._engine is not None:
-#         # Close the DB connection
-#         await sessionmanager.close()
-
-
-# app = FastAPI(lifespan=lifespan, title=settings.project_name, docs_url="/api/docs", debug=settings.debug_logs)
 app = FastAPI(
     title=settings.project_name, docs_url="/api/docs", debug=settings.debug_logs
 )
-logging.debug(f"Settings: {settings.db.db_url}")
 
 
 @app.get("/", response_model=HealthCheck, tags=["status"])

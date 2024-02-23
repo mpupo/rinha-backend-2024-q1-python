@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from src.rinha.database.unit_of_work import get_db_session, AbstractUnitOfWork
 from fastapi import Depends, HTTPException, Path
+
+from src.rinha.database.unit_of_work import AbstractUnitOfWork, get_db_session
 
 DBSessionDep = Annotated[AbstractUnitOfWork, Depends(get_db_session)]
 

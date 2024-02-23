@@ -2,9 +2,9 @@ import asyncio
 from contextlib import ExitStack
 
 import pytest
-from src.rinha.main import app as actual_app
-
 from fastapi.testclient import TestClient
+
+from src.rinha.main import app as actual_app
 
 
 @pytest.fixture(autouse=True)

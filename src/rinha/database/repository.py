@@ -1,16 +1,14 @@
 from abc import ABC, abstractmethod
-import logging
 
 from sqlalchemy import select
-from src.rinha.database.orm.models import TransactionModel, ClientModel
-from src.rinha.database.schemas import TransactionCreateSchema
-from src.rinha.domain.models import Client
-
-from src.rinha.domain.models.transaction import Transaction
 from sqlalchemy.ext.asyncio import AsyncSession
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from rinha.domain.schemas import (
+    ClientSchema,
+    TransactionCreateSchema,
+    TransactionSchema,
+)
+from src.rinha.database.orm.models import ClientModel, TransactionModel
 
 
 class Repository[T](ABC):
@@ -26,43 +24,35 @@ class Repository[T](ABC):
         raise NotImplementedError
 
 
-class ClientRepository(Repository[Client]):
-    async def add(self, client: Client | ClientModel) -> None:
-        logger.info(f"Creating client [{client.id}, {client.limit}, {client.balance}]")
-        self.db.add(client)
-        logger.info(
-            f"Done creating client [{client.id}, {client.limit}, {client.balance}]"
-        )
+class ClientRepository(Repository[ClientSchema]):
+    async def add(self, **kwargs: object) -> None:
+        raise NotImplementedError
 
-    async def get(self, client_id: int) -> ClientModel:
-        logger.info(f"Searching for client {client_id}.")
-        client = (
+    async def update(self, client: ClientSchema) -> None:
+        model = ClientModel(**client.model_dump())
+        await self.db.merge(model)
+
+    async def get(self, client_id: int) -> ClientSchema:
+        model = (
             await self.db.execute(
                 select(ClientModel).filter(ClientModel.id == client_id)
             )
         ).scalar_one_or_none()
-        logger.info(f"Client found! [{client.id}, {client.limit}, {client.balance}]")
-        return client
+        return ClientSchema.model_validate(model)
 
 
-class TransactionRepository(Repository[Transaction]):
-    async def add(self, transaction: Transaction, client: ClientModel) -> None:
-        logger.info(f"Creating transaction for client {client.id}.")
-        schema = TransactionCreateSchema.model_validate(transaction)
-        db_model = TransactionModel(
-            client_id=schema.client_id,
-            type=schema.type.value,
-            description=schema.description,
-            value=schema.value,
-        )
-        db_model.client = client
-        logger.info(
-            f"Inserting transaction ({db_model.type}, {db_model.value}) for client {client.id}."
-        )
-        self.db.add(db_model)
-        logger.info(
-            f"Done inserting transaction ({db_model.type}, {db_model.value}) for client {client.id}."
-        )
+class TransactionRepository(Repository[TransactionSchema]):
+    async def add(
+        self, transaction: TransactionCreateSchema, client: ClientSchema
+    ) -> None:
+        model = TransactionModel(**transaction.model_dump())
+        client_model = (
+            await self.db.execute(
+                select(ClientModel).filter(ClientModel.id == client.id)
+            )
+        ).scalar_one_or_none()
+        model.client = client_model
+        self.db.add(model)
 
-    async def get(self, client_id: int) -> Transaction:
+    async def get(self, client_id: int) -> TransactionSchema:
         raise NotImplementedError
