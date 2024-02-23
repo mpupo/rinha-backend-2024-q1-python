@@ -30,6 +30,7 @@ clean:
 	rm -f `find . -type f -name '.*~' `
 	rm -rf .cache
 	rm -rf .pytest_cache
+	rm -rf .ruff_cache
 	rm -rf htmlcov
 	rm -rf *.egg-info
 	rm -f .coverage
