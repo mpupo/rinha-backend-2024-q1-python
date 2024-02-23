@@ -1,5 +1,4 @@
 import abc
-import logging
 from typing import Any, AsyncIterator
 
 from sqlalchemy.ext.asyncio import (
@@ -19,7 +18,6 @@ class AbstractUnitOfWork(abc.ABC):
 
     async def __aexit__(self, exn_type, exn_value, traceback):
         if exn_type is not None:
-            logging.exception("Ocorreu um erro inesperado!")
             await self.rollback()
 
     @abc.abstractmethod
@@ -76,7 +74,7 @@ async def get_db_session() -> AsyncIterator[SqlAlchemyUnitOfWork]:
     uow = SqlAlchemyUnitOfWork(
         settings.db.db_url,
         {
-            "echo": settings.echo_sql,
+            "echo": "debug" if settings.echo_sql else settings.echo_sql,
             "future": True,
             # "isolation_level": "REPEATABLE READ",
         },

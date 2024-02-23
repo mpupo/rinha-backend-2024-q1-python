@@ -10,11 +10,13 @@ services:
       dockerfile: ./Dockerfile
     hostname: api01
     environment:
-      - DB__DB_NAME=rinha
-      - DB__DB_USER=rinha
-      - DB__DB_PASSWORD=rinha
-      - DB__DB_HOST=db
-      - DB__DB_PORT=5432
+      - RINHA_DEBUG=False
+      - RINHA_ECHO_SQL=False
+      - RINHA_DB__DB_NAME=rinha
+      - RINHA_DB__DB_USER=rinha
+      - RINHA_DB__DB_PASSWORD=rinha
+      - RINHA_DB__DB_HOST=db
+      - RINHA_DB__DB_PORT=5432
     # Não é necessário expor qualquer porta além da porta do load balancer,
     # mas é comum as pessoas o fazerem para testarem suas APIs e conectarem
     # ao banco de dados na fase de desenvolvimento.

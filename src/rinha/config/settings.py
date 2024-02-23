@@ -16,12 +16,12 @@ class PostgresSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_nested_delimiter="__")
+    model_config = SettingsConfigDict(env_nested_delimiter="__", env_prefix="rinha_")
 
     project_name: str = "rinha-backend-2024-q1-mpupo"
-    echo_sql: bool | str = "debug"
+    echo_sql: bool = True
     db: PostgresSettings = PostgresSettings()
-    debug_logs: bool = True
+    debug: bool = True
 
 
 settings = Settings()

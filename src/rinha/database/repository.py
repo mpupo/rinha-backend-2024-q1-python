@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from rinha.domain.schemas import (
+from src.rinha.database.orm.models import ClientModel, TransactionModel
+from src.rinha.domain.schemas import (
     ClientSchema,
     TransactionCreateSchema,
     TransactionSchema,
 )
-from src.rinha.database.orm.models import ClientModel, TransactionModel
 
 
 class Repository[T](ABC):

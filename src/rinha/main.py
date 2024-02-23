@@ -9,12 +9,10 @@ from src.rinha.api.routers.clientes import router as clientes_router
 from src.rinha.config.settings import settings
 
 logging.basicConfig(
-    stream=sys.stdout, level=logging.DEBUG if settings.debug_logs else logging.INFO
+    stream=sys.stdout, level=logging.DEBUG if settings.debug else logging.INFO
 )
 
-app = FastAPI(
-    title=settings.project_name, docs_url="/api/docs", debug=settings.debug_logs
-)
+app = FastAPI(title=settings.project_name, docs_url="/api/docs", debug=settings.debug)
 
 
 @app.get("/", response_model=HealthCheck, tags=["status"])
