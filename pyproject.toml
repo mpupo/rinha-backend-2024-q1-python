@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "rinha"
+version = "0.1.0"
+description = ""
+authors = ["Murilo Pupo de Oliveira <murilo.pupo@ymail.com>"]
+readme = "README.md"
+packages = [{include = "rinha", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.109.2"
+pydantic = "^2.6.1"
+uvicorn = {extras = ["standard"], version = "^0.27.0.post1"}
+sqlalchemy = "^2.0.25"
+pydantic-settings = "^2.1.0"
+asyncpg = "^0.29.0"
+
+
+[tool.poetry.group.tests.dependencies]
+pytest = "^8.0.0"
+polyfactory = "^2.14.1"
+httpx = "^0.26.0"
+pytest-asyncio = "^0.23.5"
+psycopg2-binary = "^2.9.9"
+testcontainers = {extras = ["postgres"], version = "^3.7.1"}
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
