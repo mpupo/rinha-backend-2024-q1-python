@@ -21,20 +21,11 @@ async def lifespan(app: FastAPI):
     Function that handles startup and shutdown events.
     To understand more, read https://fastapi.tiangolo.com/advanced/events/
     """
-    await SqlAlchemyUnitOfWork.initialize(
-        settings.db.db_url,
-        {
-            "echo": "debug" if settings.echo_sql else settings.echo_sql,
-            "future": True,
-            # "isolation_level": "REPEATABLE READ",
-            "pool_size": settings.db.DB_POOL_SIZE,
-            "max_overflow": settings.db.DB_MAX_OVERFLOW,
-            "pool_timeout": settings.db.DB_POOL_TIMEOUT,
-        },
-        {"autocommit": False, "autoflush": False, "expire_on_commit": False},
-    )
-    yield
-    await SqlAlchemyUnitOfWork.dispose()
+    await SqlAlchemyUnitOfWork.initialize(settings=settings.db, echo=settings.echo_sql)
+    try:
+        yield
+    finally:
+        await SqlAlchemyUnitOfWork.dispose()
 
 
 app = FastAPI(

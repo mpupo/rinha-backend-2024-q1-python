@@ -7,12 +7,17 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
+from rinha.database.orm.models import Base
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
 from src.rinha.config.settings import settings
 from src.rinha.database.unit_of_work import SqlAlchemyUnitOfWork, get_db_session
 from src.rinha.main import app as actual_app
+
+current_dir = Path(__file__).resolve().parent
+root_dir = current_dir.parent.parent
 
 
 @pytest.fixture(scope="session")
@@ -22,22 +27,32 @@ def event_loop(request) -> Generator:
     loop.close()
 
 
+@pytest.fixture(scope="session")
+def dml() -> str:
+    with open(root_dir / "postgresql/dml.sql", "r") as dml:
+        content = dml.read()
+        return content
+
+
+postgres = (
+    PostgresContainer("postgres:latest", driver="psycopg2")
+    .with_volume_mapping(
+        host=str(root_dir / "postgresql/ddl.sql"),
+        container="/docker-entrypoint-initdb.d/ddl.sql",
+    )
+    .with_volume_mapping(
+        host=str(root_dir / "postgresql/dml.sql"),
+        container="/docker-entrypoint-initdb.d/dml.sql",
+    )
+    .with_volume_mapping(
+        host=str(root_dir / "postgresql/postgresql.conf"),
+        container="/etc/postgresql/postgresql.conf",
+    )
+)
+
+
 @pytest.fixture(scope="module", autouse=True)
 def setup(request):
-    current_dir = Path(__file__).resolve().parent
-    root_dir = current_dir.parent.parent
-
-    postgres = (
-        PostgresContainer("postgres:latest", driver="psycopg2")
-        .with_volume_mapping(
-            host=str(root_dir / "postgresql/script.sql"),
-            container="/docker-entrypoint-initdb.d/script.sql",
-        )
-        .with_volume_mapping(
-            host=str(root_dir / "postgresql/postgresql.conf"),
-            container="/etc/postgresql/postgresql.conf",
-        )
-    )
     logging.info("Starting PostgresSQL container!")
     postgres.start()
 
@@ -52,49 +67,34 @@ def setup(request):
     settings.db.DB_USER = postgres.POSTGRES_USER
     settings.db.DB_PASSWORD = postgres.POSTGRES_PASSWORD
     settings.db.DB_PORT = postgres.get_exposed_port(5432)
-
-
-# @pytest.fixture(scope="function", autouse=True)
-# def setup_data():
-#     logging.info(f"Conectando ao banco: {postgres.get_connection_url()}")
-#     engine = create_engine(postgres.get_connection_url())
-#
-#     with engine.begin() as connection:
-#         connection.execute(text("DELETE FROM transacoes;"))
+    settings.echo_sql = False
+    settings.debug = False
 
 
 @pytest_asyncio.fixture()
-async def async_db() -> AsyncGenerator[AsyncSession, None]:
+async def async_db(dml: str) -> AsyncGenerator[AsyncSession, None]:
     """Start a test database session."""
-
-    logging.info(f"Connecting to the database: {settings.db.db_url}")
     engine = create_async_engine(settings.db.db_url)
-
-    # async with engine.begin() as conn:
-    # await conn.run_sync(Base.metadata.drop_all)
-    # await conn.run_sync(Base.metadata.create_all)
+    logging.info("Creating a database session for tests")
 
     session = async_sessionmaker(engine)()
     yield session
     await session.close()
 
+    async with engine.begin() as conn:
+        logging.info("Wiping database")
+        await conn.execute(text("DROP TABLE clientes, transacoes CASCADE;"))
+        await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text(dml))
+
 
 @pytest_asyncio.fixture
-async def test_app(async_db: AsyncSession) -> FastAPI:
+async def test_app(async_db) -> FastAPI:
     """Create a test app with overridden dependencies."""
     await SqlAlchemyUnitOfWork.initialize(
-        settings.db.db_url,
-        {
-            "echo": "debug" if settings.echo_sql else settings.echo_sql,
-            "future": True,
-            # "isolation_level": "REPEATABLE READ",
-            "pool_size": settings.db.DB_POOL_SIZE,
-            "max_overflow": settings.db.DB_MAX_OVERFLOW,
-            "pool_timeout": settings.db.DB_POOL_TIMEOUT,
-        },
-        {"autocommit": False, "autoflush": False, "expire_on_commit": False},
+        settings=settings.db, echo=settings.echo_sql, override=True
     )
-    uow = await SqlAlchemyUnitOfWork.create()
+    uow = await SqlAlchemyUnitOfWork.create(transaction=True)
     actual_app.dependency_overrides[get_db_session] = lambda: uow
     return actual_app
 

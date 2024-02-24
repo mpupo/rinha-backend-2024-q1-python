@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
 from src.rinha.api.dependencies import (
     DBSessionDep,
@@ -44,4 +46,7 @@ async def create_transaction(
         await db.clients.update(client=client)
         await db.transactions.add(transaction=transaction, client=client)
         await db.commit()
-        return {"limite": client.limit, "saldo": client.balance}
+        return JSONResponse(
+            content=jsonable_encoder({"limite": client.limit, "saldo": client.balance}),
+            status_code=status.HTTP_200_OK,
+        )

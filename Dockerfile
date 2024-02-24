@@ -33,4 +33,4 @@ USER python
 
 EXPOSE 8080
 
-CMD ["uvicorn", "src.rinha.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "src.rinha.main:app", "--proxy-headers" , "--host", "0.0.0.0", "--port", "8080"]
