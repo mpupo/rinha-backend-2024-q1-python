@@ -1,4 +1,6 @@
 import abc
+import logging
+from types import TracebackType
 from typing import Any, AsyncIterator
 
 from sqlalchemy.ext.asyncio import (
@@ -8,7 +10,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from src.rinha.config.settings import settings
 from src.rinha.database import repository
 
 
@@ -16,8 +17,14 @@ class AbstractUnitOfWork(abc.ABC):
     clients: repository.ClientRepository
     transactions: repository.TransactionRepository
 
-    async def __aexit__(self, exn_type, exn_value, traceback):
-        if exn_type is not None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ):
+        if exc_type is not None:
+            logging.exception(f"Ocorreu um erro! {exc_val}")
             await self.rollback()
 
     @abc.abstractmethod
@@ -38,23 +45,46 @@ class AbstractUnitOfWork(abc.ABC):
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
-    def __init__(
-        self,
+    _engine: AsyncEngine | None
+    _sessionmaker: async_sessionmaker | None
+    _initialized: bool = False
+
+    @classmethod
+    async def initialize(
+        cls,
         host: str,
         engine_kwargs: dict[str, Any] = {},
         session_kwargs: dict[str, Any] = {},
     ):
-        self._engine: AsyncEngine = create_async_engine(host, **engine_kwargs)
-        self._sessionmaker = async_sessionmaker(bind=self._engine, **session_kwargs)
+        cls._engine = create_async_engine(host, **engine_kwargs)
+        cls._sessionmaker = async_sessionmaker(bind=cls._engine, **session_kwargs)
+        cls._initialized = True
+
+    @classmethod
+    async def create(cls):
+        if not cls._initialized:
+            raise ValueError(
+                "UnitOfWork is not initialized. Call initialize method first."
+            )
+        instance_session = cls._sessionmaker()
+        instance = cls(session=instance_session)
+        return instance
+
+    @classmethod
+    async def dispose(cls) -> None:
+        await cls._engine.dispose()
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.clients: repository.ClientRepository | None = None
+        self.transactions: repository.TransactionRepository | None = None
 
     async def __aenter__(self):
-        self.session: AsyncSession = self._sessionmaker()
         self.clients = repository.ClientRepository(self.session)
         self.transactions = repository.TransactionRepository(self.session)
 
     async def __aexit__(self, *args):
         await super().__aexit__(*args)
-        await self._engine.dispose()
         await self.session.close()
 
     async def commit(self):
@@ -71,13 +101,5 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 
 async def get_db_session() -> AsyncIterator[SqlAlchemyUnitOfWork]:
-    uow = SqlAlchemyUnitOfWork(
-        settings.db.db_url,
-        {
-            "echo": "debug" if settings.echo_sql else settings.echo_sql,
-            "future": True,
-            # "isolation_level": "REPEATABLE READ",
-        },
-        {"autocommit": False, "autoflush": False, "expire_on_commit": True},
-    )
+    uow = await SqlAlchemyUnitOfWork.create()
     yield uow
