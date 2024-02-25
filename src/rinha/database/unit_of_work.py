@@ -26,7 +26,7 @@ class AbstractUnitOfWork(abc.ABC):
     ):
         if exc_type is not None:
             await self.rollback()
-            if isinstance(exc_val, ValueError):
+            if not isinstance(exc_val, ValueError):
                 logging.exception(f"Ocorreu um erro! {exc_val}")
 
     @abc.abstractmethod
@@ -124,4 +124,4 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 async def get_db_session() -> AsyncIterator[SqlAlchemyUnitOfWork]:
     uow = await SqlAlchemyUnitOfWork.create()
-    yield uow
+    return uow

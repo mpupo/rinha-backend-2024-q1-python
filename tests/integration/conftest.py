@@ -62,19 +62,19 @@ def setup(request):
 
     request.addfinalizer(remove_container)
 
-    settings.db.DB_HOST = postgres.get_container_host_ip()
-    settings.db.DB_NAME = postgres.POSTGRES_DB
-    settings.db.DB_USER = postgres.POSTGRES_USER
-    settings.db.DB_PASSWORD = postgres.POSTGRES_PASSWORD
-    settings.db.DB_PORT = postgres.get_exposed_port(5432)
-    settings.echo_sql = False
-    settings.debug = False
+    settings.DB.DB_HOST = postgres.get_container_host_ip()
+    settings.DB.DB_NAME = postgres.POSTGRES_DB
+    settings.DB.DB_USER = postgres.POSTGRES_USER
+    settings.DB.DB_PASSWORD = postgres.POSTGRES_PASSWORD
+    settings.DB.DB_PORT = postgres.get_exposed_port(5432)
+    settings.ECHO_SQL = False
+    settings.DEBUG = False
 
 
 @pytest_asyncio.fixture()
 async def async_db(dml: str) -> AsyncGenerator[AsyncSession, None]:
     """Start a test database session."""
-    engine = create_async_engine(settings.db.db_url)
+    engine = create_async_engine(settings.DB.db_url)
     logging.info("Creating a database session for tests")
 
     session = async_sessionmaker(engine)()
@@ -92,7 +92,7 @@ async def async_db(dml: str) -> AsyncGenerator[AsyncSession, None]:
 async def test_app(async_db) -> FastAPI:
     """Create a test app with overridden dependencies."""
     await SqlAlchemyUnitOfWork.initialize(
-        settings=settings.db, echo=settings.echo_sql, override=True
+        settings=settings.DB, echo=settings.ECHO_SQL, override=True
     )
     uow = await SqlAlchemyUnitOfWork.create(transaction=True)
     actual_app.dependency_overrides[get_db_session] = lambda: uow

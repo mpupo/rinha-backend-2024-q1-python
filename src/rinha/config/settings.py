@@ -3,9 +3,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class PostgresSettings(BaseSettings):
-    DB_NAME: str = "test"
-    DB_USER: str = "test"
-    DB_PASSWORD: str = "test"
+    DB_NAME: str = "rinha"
+    DB_USER: str = "rinha"
+    DB_PASSWORD: str = "rinha"
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_POOL_SIZE: int = 10
@@ -21,10 +21,11 @@ class PostgresSettings(BaseSettings):
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_nested_delimiter="__", env_prefix="rinha_")
 
-    project_name: str = "rinha-backend-2024-q1-mpupo"
-    echo_sql: bool = True
-    db: PostgresSettings = PostgresSettings()
-    debug: bool = True
+    PROJECT_NAME: str = "rinha-backend-2024-q1-mpupo"
+    ECHO_SQL: bool = True
+    DB: PostgresSettings = PostgresSettings()
+    DEBUG: bool = True
+    PROFILING: bool = False
 
 
 settings = Settings()
