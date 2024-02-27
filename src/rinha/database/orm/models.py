@@ -5,7 +5,6 @@ from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
     mapped_column,
-    relationship,
 )
 
 from src.rinha.domain.enums.operation_type import OperationTypes
@@ -35,9 +34,9 @@ class ClientModel(Base):
     limit: Mapped[int] = mapped_column("limite")
     balance: Mapped[int] = mapped_column("saldo", default=0)
 
-    transactions: Mapped[list["TransactionModel"]] = relationship(
-        "TransactionModel", lazy="selectin", back_populates="client"
-    )
+    # transactions: Mapped[list["TransactionModel"]] = relationship(
+    #     "TransactionModel", lazy="dynamic", order_by='desc(TransactionModel.created_at)'
+    # )
 
 
 class TransactionModel(Base):
@@ -49,8 +48,4 @@ class TransactionModel(Base):
     description: Mapped[str] = mapped_column("descricao", String(40))
     created_at: Mapped[datetime.datetime] = mapped_column(
         "realizada_em", TIMESTAMP(timezone=True), server_default=func.now()
-    )
-
-    client: Mapped["ClientModel"] = relationship(
-        "ClientModel", lazy="selectin", back_populates="transactions"
     )

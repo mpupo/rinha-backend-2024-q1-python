@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from src.rinha.api.models.healthcheck import HealthCheck
 from src.rinha.api.routers.clientes import router as clientes_router
 from src.rinha.config.settings import settings
-from src.rinha.database.unit_of_work import SqlAlchemyUnitOfWork
+from src.rinha.database.unit_of_work import engine
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.DEBUG if settings.DEBUG else logging.INFO
@@ -21,9 +21,8 @@ async def lifespan(app: FastAPI):
     Function that handles startup and shutdown events.
     To understand more, read https://fastapi.tiangolo.com/advanced/events/
     """
-    await SqlAlchemyUnitOfWork.initialize(settings=settings.DB, echo=settings.ECHO_SQL)
     yield
-    await SqlAlchemyUnitOfWork.dispose()
+    await engine.dispose()
 
 
 app = FastAPI(

@@ -8,6 +8,7 @@ from src.rinha.api.dependencies import (
 )
 from src.rinha.api.models import NewTransactionRequest
 from src.rinha.api.models.response import NewTransactionResponse
+from src.rinha.database.unit_of_work import SqlAlchemyUnitOfWork
 from src.rinha.domain.schemas import TransactionCreateSchema
 
 router = APIRouter(
@@ -28,14 +29,15 @@ async def create_transaction(
     request: NewTransactionRequest,
     db: DBSessionDep,
 ):
+    uow = SqlAlchemyUnitOfWork(session=db)
     transaction = TransactionCreateSchema(
         client_id=id,
         type=request.type,
         description=request.description,
         value=request.value,
     )
-    async with db:
-        client = await db.clients.get(client_id=id)
+    async with uow:
+        client = await uow.clients.get(client_id=id)
         try:
             client.update_balance(
                 new_balance=transaction.value,
@@ -43,9 +45,8 @@ async def create_transaction(
             )
         except ValueError:
             raise HTTPException(status_code=422, detail="Valor acima do limite.")
-        await db.clients.update(client=client)
-        await db.transactions.add(transaction=transaction, client=client)
-        await db.commit()
+        await uow.clients.update(client=client)
+        await uow.transactions.add(transaction=transaction, client=client)
     return JSONResponse(
         content=jsonable_encoder({"limite": client.limit, "saldo": client.balance}),
         status_code=status.HTTP_200_OK,

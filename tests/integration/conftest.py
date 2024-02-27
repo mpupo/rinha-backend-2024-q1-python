@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from testcontainers.postgres import PostgresContainer
 
 from src.rinha.config.settings import settings
-from src.rinha.database.unit_of_work import SqlAlchemyUnitOfWork, get_db_session
+from src.rinha.database.unit_of_work import get_db_session
 from src.rinha.main import app as actual_app
 
 current_dir = Path(__file__).resolve().parent
@@ -91,11 +91,7 @@ async def async_db(dml: str) -> AsyncGenerator[AsyncSession, None]:
 @pytest_asyncio.fixture
 async def test_app(async_db) -> FastAPI:
     """Create a test app with overridden dependencies."""
-    await SqlAlchemyUnitOfWork.initialize(
-        settings=settings.DB, echo=settings.ECHO_SQL, override=True
-    )
-    uow = await SqlAlchemyUnitOfWork.create(transaction=True)
-    actual_app.dependency_overrides[get_db_session] = lambda: uow
+    actual_app.dependency_overrides[get_db_session] = lambda: async_db
     return actual_app
 
 

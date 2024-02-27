@@ -17,9 +17,9 @@ services:
       - RINHA_DB__DB_PASSWORD=rinha
       - RINHA_DB__DB_HOST=db
       - RINHA_DB__DB_PORT=5432
-      - RINHA_DB__DB_POOL_SIZE=25
-      - RINHA_DB__DB_MAX_OVERFLOW=0
-      - RINHA_DB__DB_POOL_TIMEOUT=5
+      - RINHA_DB__DB_POOL_SIZE=50
+      - RINHA_DB__DB_MAX_OVERFLOW=10
+      - RINHA_DB__DB_POOL_TIMEOUT=30
     # Não é necessário expor qualquer porta além da porta do load balancer,
     # mas é comum as pessoas o fazerem para testarem suas APIs e conectarem
     # ao banco de dados na fase de desenvolvimento.
@@ -32,7 +32,7 @@ services:
       resources:
         limits:
           cpus: "0.50"
-          memory: "100MB"
+          memory: "115MB"
     healthcheck:
       test: wget --no-verbose -O /dev/null --tries=1 http://api01:8080 || exit 1
       interval: 2s
@@ -90,7 +90,7 @@ services:
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
           cpus: "0.4"
-          memory: "230MB"
+          memory: "300MB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --dbname=rinha --username=rinha"]
       interval: 2s
