@@ -1,11 +1,7 @@
 import datetime
 
 from sqlalchemy import TIMESTAMP, Enum, ForeignKey, String, func
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.rinha.domain.enums.operation_type import OperationTypes
 
@@ -34,9 +30,9 @@ class ClientModel(Base):
     limit: Mapped[int] = mapped_column("limite")
     balance: Mapped[int] = mapped_column("saldo", default=0)
 
-    # transactions: Mapped[list["TransactionModel"]] = relationship(
-    #     "TransactionModel", lazy="dynamic", order_by='desc(TransactionModel.created_at)'
-    # )
+    transactions: Mapped[list["TransactionModel"]] = relationship(
+        "TransactionModel", lazy="dynamic", order_by="desc(TransactionModel.created_at)"
+    )
 
 
 class TransactionModel(Base):

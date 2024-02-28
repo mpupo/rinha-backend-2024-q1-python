@@ -17,7 +17,7 @@ services:
       - RINHA_DB__DB_PASSWORD=rinha
       - RINHA_DB__DB_HOST=db
       - RINHA_DB__DB_PORT=5432
-      - RINHA_DB__DB_POOL_SIZE=50
+      - RINHA_DB__DB_POOL_SIZE=35
       - RINHA_DB__DB_MAX_OVERFLOW=10
       - RINHA_DB__DB_POOL_TIMEOUT=30
     # Não é necessário expor qualquer porta além da porta do load balancer,
@@ -32,7 +32,7 @@ services:
       resources:
         limits:
           cpus: "0.50"
-          memory: "115MB"
+          memory: "100MB"
     healthcheck:
       test: wget --no-verbose -O /dev/null --tries=1 http://api01:8080 || exit 1
       interval: 2s
@@ -90,22 +90,22 @@ services:
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
           cpus: "0.4"
-          memory: "300MB"
+          memory: "330MB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --dbname=rinha --username=rinha"]
       interval: 2s
       timeout: 2s
       retries: 30
-  # pgadmin:
-  #   image: dpage/pgadmin4:latest
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: "rinha"
-  #     PGADMIN_DEFAULT_PASSWORD: "rinha"
-  #   ports:
-  #     - "8080:80"
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "rinha@rinha.com"
+      PGADMIN_DEFAULT_PASSWORD: "rinha"
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
 
 # O uso do modo `bridge` deve ser adequado à carga que será usada no teste.
 # A edição anterior se beneficiou do modo host pois o volume de requisições

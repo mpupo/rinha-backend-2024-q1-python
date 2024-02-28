@@ -1,4 +1,5 @@
 import abc
+from asyncio import current_task
 from types import TracebackType
 from typing import AsyncIterator
 
@@ -6,6 +7,7 @@ import sqlalchemy
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
+    async_scoped_session,
     async_sessionmaker,
     create_async_engine,
 )
@@ -32,6 +34,10 @@ session_params = {"autocommit": False, "autoflush": False, "expire_on_commit": F
 
 engine: AsyncEngine = create_async_engine(settings.DB.db_url, **engine_params)
 sessionmaker = async_sessionmaker(bind=engine, **session_params)
+register = async_scoped_session(
+    sessionmaker,
+    scopefunc=current_task,
+)
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
@@ -57,9 +63,11 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         else:
             await self.session.commit()
         finally:
-            await self.session.close()
+            # await self.session.close()
+            await register.remove()
 
 
 async def get_db_session() -> AsyncIterator[SqlAlchemyUnitOfWork]:
-    session = sessionmaker()
-    yield session
+    session = register()
+    uow = SqlAlchemyUnitOfWork(session=session)
+    return uow
