@@ -7,7 +7,7 @@ services:
     #image: ana/minha-api-matadora:latest
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile.dev
     hostname: api01
     environment:
       - RINHA_DEBUG=False
@@ -17,7 +17,7 @@ services:
       - RINHA_DB__DB_PASSWORD=rinha
       - RINHA_DB__DB_HOST=db
       - RINHA_DB__DB_PORT=5432
-      - RINHA_DB__DB_POOL_SIZE=35
+      - RINHA_DB__DB_POOL_SIZE=50
       - RINHA_DB__DB_MAX_OVERFLOW=10
       - RINHA_DB__DB_POOL_TIMEOUT=30
     # Não é necessário expor qualquer porta além da porta do load balancer,
@@ -26,40 +26,18 @@ services:
     ports:
       - "18081:8080"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     deploy:
       resources:
         limits:
           cpus: "0.50"
           memory: "100MB"
-    healthcheck:
-      test: wget --no-verbose -O /dev/null --tries=1 http://api01:8080 || exit 1
-      interval: 2s
-      start_period: 10s
-      timeout: 5s
-      retries: 30
-  api02:
-    # Essa sintaxe reusa o que foi declarado em 'api01'.
-    <<: *api
-    hostname: api02
-    ports:
-      - "18082:8080"
-    healthcheck:
-      test: wget --no-verbose -O /dev/null --tries=1 http://api02:8080 || exit 1
-      interval: 2s
-      start_period: 5s
-      timeout: 5s
-      retries: 10
   nginx:
     image: nginx:latest
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      api01:
-        condition: service_healthy
-      # api02:
-      #   condition: service_healthy
+      - api01
     ports:
         # Obrigatório expor/usar a porta 9999 no load balancer!
       - "9999:9999"
@@ -90,22 +68,22 @@ services:
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
           cpus: "0.4"
-          memory: "330MB"
+          memory: "230MB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --dbname=rinha --username=rinha"]
       interval: 2s
       timeout: 2s
       retries: 30
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "rinha@rinha.com"
-      PGADMIN_DEFAULT_PASSWORD: "rinha"
-    ports:
-      - "8080:80"
-    depends_on:
-      db:
-        condition: service_healthy
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: "rinha"
+  #     PGADMIN_DEFAULT_PASSWORD: "rinha"
+  #   ports:
+  #     - "8080:80"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
 
 # O uso do modo `bridge` deve ser adequado à carga que será usada no teste.
 # A edição anterior se beneficiou do modo host pois o volume de requisições

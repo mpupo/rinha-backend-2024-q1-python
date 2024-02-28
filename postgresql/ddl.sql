@@ -18,12 +18,3 @@ CREATE TABLE transacoes (
      cliente_id integer REFERENCES clientes(id) NOT NULL,
      transacao_id integer REFERENCES transacoes(id) NOT NULL
 ); */
-DO $$ BEGIN
-INSERT INTO clientes (limite)
-VALUES (1000 * 100),
-     (800 * 100),
-     (10000 * 100),
-     (100000 * 100),
-     (5000 * 100);
-END;
-$$

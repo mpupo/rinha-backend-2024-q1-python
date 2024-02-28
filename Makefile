@@ -41,3 +41,8 @@ clean:
 docker-test:
 	docker-compose down --rmi local
 	docker-compose up --build --force-recreate
+
+.PHONY: docker-dev
+docker-dev:
+	docker-compose -f docker-compose.dev.yaml down --rmi local
+	docker-compose -f docker-compose.dev.yaml up --build --force-recreate

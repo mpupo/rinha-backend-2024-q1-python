@@ -1,5 +1,6 @@
 import logging
 import sys
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
@@ -7,18 +8,53 @@ from fastapi import FastAPI
 from src.rinha.api.models.healthcheck import HealthCheck
 from src.rinha.api.routers.clientes import router as clientes_router
 from src.rinha.config.settings import settings
+from src.rinha.database.unit_of_work import SqlAlchemyUnitOfWork
 
 logging.basicConfig(
-    stream=sys.stdout, level=logging.DEBUG if settings.debug else logging.INFO
+    stream=sys.stdout, level=logging.DEBUG if settings.DEBUG else logging.INFO
 )
 
-app = FastAPI(title=settings.project_name, docs_url="/api/docs", debug=settings.debug)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Function that handles startup and shutdown events.
+    To understand more, read https://fastapi.tiangolo.com/advanced/events/
+    """
+    await SqlAlchemyUnitOfWork.initialize(settings=settings.DB, echo=settings.ECHO_SQL)
+    yield
+    await SqlAlchemyUnitOfWork.dispose()
+
+
+app = FastAPI(
+    lifespan=lifespan,
+    title=settings.PROJECT_NAME,
+    debug=settings.DEBUG,
+)
+
+if settings.PROFILING:
+    from fastapi.requests import Request
+    from fastapi.responses import HTMLResponse
+    from pyinstrument import Profiler
+
+    @app.middleware("http")
+    async def profile_request(request: Request, call_next):
+        """Profile the current request
+
+        https://pyinstrument.readthedocs.io/en/latest/guide.html#profile-a-web-request-in-fastapi
+        https://blog.balthazar-rouberol.com/how-to-profile-a-fastapi-asynchronous-request
+        """
+        profiler = Profiler(async_mode="enabled")
+        profiler.start()
+        await call_next(request)
+        profiler.stop()
+        return HTMLResponse(profiler.output_html())
 
 
 @app.get("/", response_model=HealthCheck, tags=["status"])
 async def health_check():
     return {
-        "name": settings.project_name,
+        "name": settings.PROJECT_NAME,
     }
 
 
@@ -26,4 +62,4 @@ async def health_check():
 app.include_router(clientes_router)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

@@ -12,7 +12,7 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
-RUN poetry install --without dev,tests --no-root --no-ansi --no-interaction
+RUN poetry install --without tests --no-root --no-ansi --no-interaction
 
 FROM python:3.12.0-alpine as runtime
 
@@ -27,7 +27,7 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY ./src ./src
 
-RUN addgroup -S python && adduser -S python -G python && chown python:python /app
+RUN addgroup -S python && adduser -S python -G python && chown -R python:python /app
 
 USER python
 

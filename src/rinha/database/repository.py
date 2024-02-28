@@ -46,12 +46,6 @@ class TransactionRepository(Repository[TransactionSchema]):
         self, transaction: TransactionCreateSchema, client: ClientSchema
     ) -> None:
         model = TransactionModel(**transaction.model_dump())
-        client_model = (
-            await self.db.execute(
-                select(ClientModel).filter(ClientModel.id == client.id)
-            )
-        ).scalar_one_or_none()
-        model.client = client_model
         self.db.add(model)
 
     async def get(self, client_id: int) -> TransactionSchema:

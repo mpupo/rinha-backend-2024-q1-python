@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import ORJSONResponse
 
 from src.rinha.api.dependencies import (
     DBSessionDep,
@@ -20,6 +21,7 @@ router = APIRouter(
     "/{id}/transacoes",
     status_code=status.HTTP_200_OK,
     response_model=NewTransactionResponse,
+    response_class=ORJSONResponse,
 )
 async def create_transaction(
     id: int,
@@ -43,5 +45,7 @@ async def create_transaction(
             raise HTTPException(status_code=422, detail="Valor acima do limite.")
         await db.clients.update(client=client)
         await db.transactions.add(transaction=transaction, client=client)
-        await db.commit()
-        return {"limite": client.limit, "saldo": client.balance}
+    return ORJSONResponse(
+        content={"limite": client.limit, "saldo": client.balance},
+        status_code=status.HTTP_200_OK,
+    )
