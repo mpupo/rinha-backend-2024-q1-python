@@ -2,10 +2,12 @@ from abc import ABC, abstractmethod
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from src.rinha.database.orm.models import ClientModel, TransactionModel
 from src.rinha.domain.schemas import (
     ClientSchema,
+    ClientSchemaWithTransactions,
     TransactionCreateSchema,
     TransactionSchema,
 )
@@ -32,13 +34,24 @@ class ClientRepository(Repository[ClientSchema]):
         model = ClientModel(**client.model_dump())
         await self.db.merge(model)
 
-    async def get(self, client_id: int) -> ClientSchema:
-        model = (
-            await self.db.execute(
-                select(ClientModel).filter(ClientModel.id == client_id)
+    async def get(
+        self, client_id: int, with_transactions: bool = False
+    ) -> ClientSchema | ClientSchemaWithTransactions:
+        if with_transactions:
+            query = (
+                select(ClientModel)
+                .options(joinedload(ClientModel.transactions))
+                .fetch(10)
+                .filter(ClientModel.id == client_id)
             )
-        ).scalar_one_or_none()
-        return ClientSchema.model_validate(model)
+        else:
+            query = select(ClientModel).filter(ClientModel.id == client_id)
+        model = (await self.db.execute(query)).unique().scalar_one_or_none()
+        return (
+            ClientSchemaWithTransactions.model_validate(model)
+            if with_transactions
+            else ClientSchema.model_validate(model)
+        )
 
 
 class TransactionRepository(Repository[TransactionSchema]):

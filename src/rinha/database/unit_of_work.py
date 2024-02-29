@@ -1,4 +1,5 @@
 import abc
+import logging
 from asyncio import current_task
 from types import TracebackType
 from typing import AsyncIterator
@@ -93,8 +94,9 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         try:
             if exc_type is not None:
                 await self.session.rollback()
-        except sqlalchemy.exc.SQLAlchemyError:
-            pass
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            logging.exception(f"Ocorreu um erro: {e}")
+            raise
         else:
             await self.session.commit()
         finally:

@@ -8,13 +8,14 @@ packages = [{include = "rinha", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
-fastapi = {extras = ["orjson"], version = "^0.110.0"}
+fastapi = "^0.110.0"
 pydantic = "^2.6.1"
 uvicorn = {extras = ["standard"], version = "^0.27.0.post1"}
 sqlalchemy = "^2.0.25"
 pydantic-settings = "^2.1.0"
 asyncpg = "^0.29.0"
 orjson = "^3.9.15"
+pytz = "^2024.1"
 
 
 [tool.poetry.group.tests.dependencies]
@@ -36,7 +37,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 log_cli = true
-log_cli_level = "INFO"
+log_cli_level = "DEBUG"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
