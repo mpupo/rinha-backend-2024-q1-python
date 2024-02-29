@@ -23,9 +23,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_nested_delimiter="__", env_prefix="rinha_")
 
     PROJECT_NAME: str = "rinha-backend-2024-q1-mpupo"
-    ECHO_SQL: bool = True
+    ECHO_SQL: bool = False
     DB: PostgresSettings = PostgresSettings()
-    DEBUG: bool = True
+    DEBUG: bool = False
     PROFILING: bool = False
     TIMEZONE: str = "America/Sao_Paulo"
 
