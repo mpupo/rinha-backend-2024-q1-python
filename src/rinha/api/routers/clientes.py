@@ -6,7 +6,12 @@ from src.rinha.api.dependencies import (
     validate_client_id,
 )
 from src.rinha.api.models import NewTransactionRequest
-from src.rinha.api.models.response import NewTransactionResponse
+from src.rinha.api.models.response import (
+    BalanceDTO,
+    NewTransactionResponse,
+    QueryTransactionsResponse,
+    TransactionsDTO,
+)
 from src.rinha.domain.schemas import TransactionCreateSchema
 
 router = APIRouter(
@@ -49,3 +54,25 @@ async def create_transaction(
         content={"limite": client.limit, "saldo": client.balance},
         status_code=status.HTTP_200_OK,
     )
+
+
+@router.get(
+    "/{id}/extrato",
+    status_code=status.HTTP_200_OK,
+    response_model=QueryTransactionsResponse,
+    response_class=ORJSONResponse,
+)
+async def list_transactions(
+    id: int,
+    db: DBSessionDep,
+):
+    async with db:
+        client = await db.clients.get(client_id=id, with_transactions=True)
+
+    balance = BalanceDTO(total=client.balance, limit=client.limit)
+    transactions = tuple(
+        TransactionsDTO.model_validate(transaction)
+        for transaction in client.transactions
+    )
+
+    return QueryTransactionsResponse(balance=balance, recent_transactions=transactions)

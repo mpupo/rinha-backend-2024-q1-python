@@ -1,3 +1,4 @@
+import pytz
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -26,6 +27,10 @@ class Settings(BaseSettings):
     DB: PostgresSettings = PostgresSettings()
     DEBUG: bool = True
     PROFILING: bool = False
+    TIMEZONE: str = "America/Sao_Paulo"
 
 
 settings = Settings()
+
+UTC_TIMEZONE = pytz.timezone("UTC")
+TIMEZONE = pytz.timezone(settings.TIMEZONE)
