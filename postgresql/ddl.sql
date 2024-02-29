@@ -1,4 +1,3 @@
--- Coloque scripts iniciais aqui
 CREATE TYPE tipo_transacao AS ENUM ('c', 'd');
 CREATE TABLE clientes (
      id serial PRIMARY KEY,
@@ -13,8 +12,3 @@ CREATE TABLE transacoes (
      descricao varchar(40) NOT NULL CHECK (descricao <> ''),
      realizada_em timestamp with time zone DEFAULT current_timestamp
 );
-/* CREATE TABLE clientes_transacoes (
-     id serial PRIMARY KEY,
-     cliente_id integer REFERENCES clientes(id) NOT NULL,
-     transacao_id integer REFERENCES transacoes(id) NOT NULL
-); */

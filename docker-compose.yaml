@@ -96,16 +96,6 @@ services:
       interval: 2s
       timeout: 2s
       retries: 30
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "rinha@rinha.com"
-      PGADMIN_DEFAULT_PASSWORD: "rinha"
-    ports:
-      - "8080:80"
-    depends_on:
-      db:
-        condition: service_healthy
 
 # O uso do modo `bridge` deve ser adequado à carga que será usada no teste.
 # A edição anterior se beneficiou do modo host pois o volume de requisições
