@@ -2,9 +2,9 @@ import pytest
 import sqlalchemy as sa
 from fastapi import status
 from httpx import AsyncClient
-from rinha.config.settings import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.rinha.config.settings import settings
 from src.rinha.database.orm.models import (
     ClientModel,
     TransactionModel,

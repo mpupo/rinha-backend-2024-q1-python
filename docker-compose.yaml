@@ -32,7 +32,7 @@ services:
       resources:
         limits:
           cpus: "0.50"
-          memory: "100MB"
+          memory: "112.5MB"
     healthcheck:
       test: wget --no-verbose -O /dev/null --tries=1 http://api01:8080 || exit 1
       interval: 2s
@@ -67,7 +67,7 @@ services:
       resources:
         limits:
           cpus: "0.10"
-          memory: "20MB"
+          memory: "25MB"
   db:
     image: postgres:latest
     hostname: db
@@ -90,7 +90,7 @@ services:
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
           cpus: "0.4"
-          memory: "330MB"
+          memory: "300MB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --dbname=rinha --username=rinha"]
       interval: 2s

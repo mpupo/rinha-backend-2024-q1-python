@@ -23,7 +23,7 @@ class ClientModel(Base):
     balance: Mapped[int] = mapped_column("saldo", default=0)
 
     transactions: Mapped[list["TransactionModel"]] = relationship(
-        "TransactionModel", lazy="joined", order_by="desc(TransactionModel.created_at)"
+        "TransactionModel", lazy="raise", order_by="desc(TransactionModel.created_at)"
     )
 
 

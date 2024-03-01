@@ -8,8 +8,8 @@ from src.rinha.api.dependencies import (
 from src.rinha.api.models import NewTransactionRequest
 from src.rinha.api.models.response import (
     BalanceDTO,
-    NewTransactionResponse,
-    QueryTransactionsResponse,
+    # NewTransactionResponse,
+    # QueryTransactionsResponse,
     TransactionsDTO,
 )
 from src.rinha.domain.schemas import TransactionCreateSchema
@@ -25,7 +25,7 @@ router = APIRouter(
 @router.post(
     "/{id}/transacoes",
     status_code=status.HTTP_200_OK,
-    response_model=NewTransactionResponse,
+    # response_model=NewTransactionResponse,
     response_class=ORJSONResponse,
 )
 async def create_transaction(
@@ -59,7 +59,7 @@ async def create_transaction(
 @router.get(
     "/{id}/extrato",
     status_code=status.HTTP_200_OK,
-    response_model=QueryTransactionsResponse,
+    # response_model=QueryTransactionsResponse,
     response_class=ORJSONResponse,
 )
 async def list_transactions(
@@ -71,8 +71,12 @@ async def list_transactions(
 
     balance = BalanceDTO(total=client.balance, limit=client.limit)
     transactions = tuple(
-        TransactionsDTO.model_validate(transaction)
+        TransactionsDTO.model_validate(transaction).model_dump(by_alias=True)
         for transaction in client.transactions
     )
 
-    return QueryTransactionsResponse(balance=balance, recent_transactions=transactions)
+    return {
+        "saldo": balance.model_dump(by_alias=True),
+        "ultimas_transacoes": transactions,
+    }
+    # return QueryTransactionsResponse(balance=balance, recent_transactions=transactions)

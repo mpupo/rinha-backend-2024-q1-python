@@ -7,17 +7,33 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
-from rinha.database.orm.models import Base
+from pyinstrument import Profiler
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
 from src.rinha.config.settings import settings
+from src.rinha.database.orm.models import Base
 from src.rinha.database.unit_of_work import SqlAlchemyUnitOfWork, get_db_session
 from src.rinha.main import app as actual_app
 
 current_dir = Path(__file__).resolve().parent
 root_dir = current_dir.parent.parent
+
+
+@pytest.fixture(autouse=True)
+def auto_profile(request):
+    PROFILE_ROOT = current_dir / ".profiles"
+    # Turn profiling on
+    profiler = Profiler()
+    profiler.start()
+
+    yield  # Run test
+
+    profiler.stop()
+    PROFILE_ROOT.mkdir(exist_ok=True)
+    results_file = PROFILE_ROOT / f"{request.node.name}.html"
+    profiler.write_html(results_file)
 
 
 @pytest.fixture(scope="session")
@@ -67,8 +83,8 @@ def setup(request):
     settings.DB.DB_USER = postgres.POSTGRES_USER
     settings.DB.DB_PASSWORD = postgres.POSTGRES_PASSWORD
     settings.DB.DB_PORT = postgres.get_exposed_port(5432)
-    settings.ECHO_SQL = False
-    settings.DEBUG = False
+    settings.ECHO_SQL = True
+    settings.DEBUG = True
 
 
 @pytest_asyncio.fixture()
@@ -92,7 +108,10 @@ async def async_db(dml: str) -> AsyncGenerator[AsyncSession, None]:
 async def test_app(async_db) -> FastAPI:
     """Create a test app with overridden dependencies."""
     await SqlAlchemyUnitOfWork.initialize(
-        settings=settings.DB, echo=settings.ECHO_SQL, override=True
+        settings=settings.DB,
+        echo_sql=settings.ECHO_SQL,
+        echo_pool=settings.DEBUG,
+        override=True,
     )
     uow = await SqlAlchemyUnitOfWork.create(transaction=True)
     actual_app.dependency_overrides[get_db_session] = lambda: uow
