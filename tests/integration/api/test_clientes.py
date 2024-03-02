@@ -44,6 +44,7 @@ class TestClientesAPI:
             )
         ).scalar_one_or_none()
 
+        assert latest_transaction is not None
         assert latest_transaction.value == request.value
         assert latest_transaction.type == request.type
         assert latest_transaction.description == request.description
@@ -61,6 +62,7 @@ class TestClientesAPI:
             .scalar_one_or_none()
         )
 
+        assert updated_client is not None
         assert updated_client.balance == request.value
 
     async def test_create_transaction_success_balance_not_changed(
@@ -95,6 +97,7 @@ class TestClientesAPI:
             )
         ).scalar_one_or_none()
 
+        assert latest_transaction is not None
         assert latest_transaction.value == first.value
         assert latest_transaction.type == first.type
         assert latest_transaction.description == first.description
@@ -112,6 +115,7 @@ class TestClientesAPI:
             .scalar_one_or_none()
         )
 
+        assert updated_client is not None
         assert updated_client.balance < (second.value + first.value)
 
     async def test_list_transaction_success(

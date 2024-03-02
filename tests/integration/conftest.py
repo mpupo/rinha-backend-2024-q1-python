@@ -25,7 +25,7 @@ root_dir = current_dir.parent.parent
 def auto_profile(request):
     PROFILE_ROOT = current_dir / ".profiles"
     # Turn profiling on
-    profiler = Profiler()
+    profiler = Profiler(async_mode="strict")
     profiler.start()
 
     yield  # Run test
@@ -113,8 +113,7 @@ async def test_app(async_db) -> FastAPI:
         echo_pool=settings.DEBUG,
         override=True,
     )
-    uow = await SqlAlchemyUnitOfWork.create(transaction=True)
-    actual_app.dependency_overrides[get_db_session] = lambda: uow
+    actual_app.dependency_overrides[get_db_session] = lambda: SqlAlchemyUnitOfWork()
     return actual_app
 
 

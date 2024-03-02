@@ -10,8 +10,6 @@ services:
       dockerfile: ./Dockerfile
     hostname: api01
     environment:
-      - RINHA_DEBUG=False
-      - RINHA_ECHO_SQL=False
       - RINHA_DB__DB_NAME=rinha
       - RINHA_DB__DB_USER=rinha
       - RINHA_DB__DB_PASSWORD=rinha
@@ -32,7 +30,7 @@ services:
       resources:
         limits:
           cpus: "0.50"
-          memory: "112.5MB"
+          memory: "100MB"
     healthcheck:
       test: wget --no-verbose -O /dev/null --tries=1 http://api01:8080 || exit 1
       interval: 2s
@@ -90,7 +88,7 @@ services:
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
           cpus: "0.4"
-          memory: "300MB"
+          memory: "325MB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --dbname=rinha --username=rinha"]
       interval: 2s

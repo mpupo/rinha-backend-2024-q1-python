@@ -13,7 +13,7 @@ format:
 .PHONY: lint
 lint:
 	ruff $(sources) --fix --exit-zero
-	mypy $(sources)
+	mypy $(sources) --check-untyped-defs
 
 .PHONY: test
 test:

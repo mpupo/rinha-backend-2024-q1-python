@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,43 +9,31 @@ from src.rinha.domain.schemas import (
     ClientSchema,
     ClientSchemaWithTransactions,
     TransactionCreateSchema,
-    TransactionSchema,
 )
 
 
-class Repository[T](ABC):
+class Repository(ABC):
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    @abstractmethod
-    async def add(self, **kwargs: object) -> None:
-        raise NotImplementedError
 
-    @abstractmethod
-    async def get(self, client_id: int) -> T:
-        raise NotImplementedError
-
-
-class ClientRepository(Repository[ClientSchema]):
-    async def add(self, **kwargs: object) -> None:
-        raise NotImplementedError
-
+class ClientRepository(Repository):
     async def update(self, client: ClientSchema) -> None:
         model = ClientModel(**client.model_dump())
         await self.db.merge(model)
 
     async def get(
-        self, client_id: int, with_transactions: bool = False
-    ) -> ClientSchema | ClientSchemaWithTransactions:
+        self, id: int, with_transactions: bool = False
+    ) -> ClientSchemaWithTransactions:
         if with_transactions:
             query = (
                 select(ClientModel)
                 .options(joinedload(ClientModel.transactions))
                 .fetch(10)
-                .filter(ClientModel.id == client_id)
+                .filter(ClientModel.id == id)
             )
         else:
-            query = select(ClientModel).filter(ClientModel.id == client_id)
+            query = select(ClientModel).filter(ClientModel.id == id)
         model = (await self.db.execute(query)).unique().scalar_one_or_none()
         return (
             ClientSchemaWithTransactions.model_validate(model)
@@ -54,12 +42,7 @@ class ClientRepository(Repository[ClientSchema]):
         )
 
 
-class TransactionRepository(Repository[TransactionSchema]):
-    async def add(
-        self, transaction: TransactionCreateSchema, client: ClientSchema
-    ) -> None:
-        model = TransactionModel(**transaction.model_dump())
+class TransactionRepository(Repository):
+    async def add(self, new_model: TransactionCreateSchema) -> None:
+        model = TransactionModel(**new_model.model_dump())
         self.db.add(model)
-
-    async def get(self, client_id: int) -> TransactionSchema:
-        raise NotImplementedError

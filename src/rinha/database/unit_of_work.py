@@ -2,12 +2,10 @@ import abc
 import logging
 from asyncio import current_task
 from types import TracebackType
-from typing import AsyncIterator
 
 import sqlalchemy
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
-    AsyncSession,
     async_scoped_session,
     async_sessionmaker,
     create_async_engine,
@@ -21,11 +19,24 @@ class AbstractUnitOfWork(abc.ABC):
     clients: repository.ClientRepository
     transactions: repository.TransactionRepository
 
+    @abc.abstractmethod
+    async def __aenter__(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ):
+        raise NotImplementedError
+
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
-    engine: AsyncEngine | None
-    sessionmaker: async_sessionmaker | None
-    registry: async_scoped_session | None
+    engine: AsyncEngine
+    sessionmaker: async_sessionmaker
+    registry: async_scoped_session
     initialized: bool = False
 
     @classmethod
@@ -69,27 +80,15 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
                 logging.getLogger(module).setLevel(logging.DEBUG)
 
     @classmethod
-    async def create(cls, transaction: bool = False):
-        if not cls.initialized:
-            raise ValueError(
-                "UnitOfWork is not initialized. Call initialize method first."
-            )
-        instance_session = cls.sessionmaker()
-        if transaction:
-            await instance_session.begin()
-        instance = cls(session=instance_session)
-        return instance
-
-    @classmethod
     async def dispose(cls) -> None:
         await cls.engine.dispose()
 
-    def __init__(self, session: AsyncSession):
-        self.session = session
-        self.clients: repository.ClientRepository | None = None
-        self.transactions: repository.TransactionRepository | None = None
-
     async def __aenter__(self):
+        if not self.initialized:
+            raise ValueError(
+                "UnitOfWork is not initialized. Call initialize method first."
+            )
+        self.session = self.sessionmaker()
         self.clients = repository.ClientRepository(self.session)
         self.transactions = repository.TransactionRepository(self.session)
         return self
@@ -104,13 +103,12 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             if exc_type is not None:
                 await self.session.rollback()
         except sqlalchemy.exc.SQLAlchemyError as e:
-            logging.exception(f"Ocorreu um erro: {e}")
+            logging.exception(f"Error: {e}")
             raise
-        # else:
-        # Removed due to the session.begin()
-        #    await self.session.commit()
-        # finally:
-        #    await self.session.close()
+        else:
+            await self.session.commit()
+        finally:
+            await self.session.close()
 
     async def commit(self):
         await self.session.commit()
@@ -119,10 +117,8 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         await self.session.rollback()
 
 
-async def get_db_session() -> AsyncIterator[SqlAlchemyUnitOfWork]:
+async def get_db_session() -> SqlAlchemyUnitOfWork:
     logging.debug(
         f"Pool:{SqlAlchemyUnitOfWork.engine.pool.status()}, EngineID: {id(SqlAlchemyUnitOfWork.engine)}"
     )
-    async with SqlAlchemyUnitOfWork.sessionmaker() as session:
-        async with session.begin():
-            yield SqlAlchemyUnitOfWork(session=session)
+    return SqlAlchemyUnitOfWork()

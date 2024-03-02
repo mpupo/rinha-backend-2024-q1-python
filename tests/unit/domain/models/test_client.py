@@ -8,9 +8,8 @@ class TestClientSchema:
     def test_update_balance_success(self):
         sut = ClientSchema(id=1, limit=1000, balance=1000)
 
-        result = sut.update_balance(1000, operation_type=OperationTypes.CREDIT)
+        sut.update_balance(1000, operation_type=OperationTypes.CREDIT)
 
-        assert result is None
         assert sut.balance == 2000
 
     def test_update_balance_raise_error(self):
