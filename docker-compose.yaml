@@ -31,8 +31,11 @@ services:
         limits:
           cpus: "0.50"
           memory: "100MB"
+    volumes:
+      - ./sockets:/app/sockets:rw
+    command: "uvicorn src.rinha.main:app --proxy-headers --forwarded-allow-ips * --host 0.0.0.0 --port 8080 --workers 1 --uds /app/sockets/api1.sock"
     healthcheck:
-      test: wget --no-verbose -O /dev/null --tries=1 http://api01:8080 || exit 1
+      test: test -S /app/sockets/api1.sock || exit 1
       interval: 2s
       start_period: 10s
       timeout: 5s
@@ -43,21 +46,23 @@ services:
     hostname: api02
     ports:
       - "18082:8080"
+    command: "uvicorn src.rinha.main:app --proxy-headers --forwarded-allow-ips * --host 0.0.0.0 --port 8080 --workers 1 --uds /app/sockets/api2.sock"
     healthcheck:
-      test: wget --no-verbose -O /dev/null --tries=1 http://api02:8080 || exit 1
+      test: test -S /app/sockets/api2.sock || exit 1
       interval: 2s
-      start_period: 5s
+      start_period: 10s
       timeout: 5s
-      retries: 10
+      retries: 30
   nginx:
     image: nginx:latest
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./sockets:/tmp/sockets:rw
     depends_on:
       api01:
         condition: service_healthy
-      # api02:
-      #   condition: service_healthy
+      api02:
+        condition: service_healthy
     ports:
         # Obrigatório expor/usar a porta 9999 no load balancer!
       - "9999:9999"
