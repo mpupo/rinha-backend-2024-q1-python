@@ -13,6 +13,7 @@ format:
 .PHONY: lint
 lint:
 	ruff $(sources) --fix --exit-zero
+	mypy $(sources) --check-untyped-defs
 
 .PHONY: test
 test:
@@ -39,10 +40,10 @@ clean:
 
 .PHONY: docker-test
 docker-test:
-	docker-compose down --rmi local
+	docker-compose down --rmi local --volumes
 	docker-compose up --build --force-recreate
 
 .PHONY: docker-dev
 docker-dev:
-	docker-compose -f docker-compose.dev.yaml down --rmi local
+	docker-compose -f docker-compose.dev.yaml down --rmi local --volumes
 	docker-compose -f docker-compose.dev.yaml up --build --force-recreate

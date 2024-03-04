@@ -2,6 +2,7 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 
+import anyio
 import uvicorn
 from fastapi import FastAPI
 
@@ -11,7 +12,7 @@ from src.rinha.config.settings import settings
 from src.rinha.database.unit_of_work import SqlAlchemyUnitOfWork
 
 logging.basicConfig(
-    stream=sys.stdout, level=logging.DEBUG if settings.DEBUG else logging.INFO
+    stream=sys.stdout, level=logging.DEBUG if settings.DEBUG else logging.WARNING
 )
 
 
@@ -21,7 +22,12 @@ async def lifespan(app: FastAPI):
     Function that handles startup and shutdown events.
     To understand more, read https://fastapi.tiangolo.com/advanced/events/
     """
-    await SqlAlchemyUnitOfWork.initialize(settings=settings.DB, echo=settings.ECHO_SQL)
+    await SqlAlchemyUnitOfWork.initialize(
+        settings=settings.DB, echo_sql=settings.ECHO_SQL, echo_pool=settings.DEBUG
+    )
+    limiter = anyio.to_thread.current_default_thread_limiter()
+    limiter.total_tokens = 100
+
     yield
     await SqlAlchemyUnitOfWork.dispose()
 

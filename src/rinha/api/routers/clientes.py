@@ -8,8 +8,6 @@ from src.rinha.api.dependencies import (
 from src.rinha.api.models import NewTransactionRequest
 from src.rinha.api.models.response import (
     BalanceDTO,
-    NewTransactionResponse,
-    QueryTransactionsResponse,
     TransactionsDTO,
 )
 from src.rinha.domain.schemas import TransactionCreateSchema
@@ -25,7 +23,6 @@ router = APIRouter(
 @router.post(
     "/{id}/transacoes",
     status_code=status.HTTP_200_OK,
-    response_model=NewTransactionResponse,
     response_class=ORJSONResponse,
 )
 async def create_transaction(
@@ -40,7 +37,7 @@ async def create_transaction(
         value=request.value,
     )
     async with db:
-        client = await db.clients.get(client_id=id)
+        client = await db.clients.get(id=id)
         try:
             client.update_balance(
                 new_balance=transaction.value,
@@ -49,17 +46,13 @@ async def create_transaction(
         except ValueError:
             raise HTTPException(status_code=422, detail="Valor acima do limite.")
         await db.clients.update(client=client)
-        await db.transactions.add(transaction=transaction, client=client)
-    return ORJSONResponse(
-        content={"limite": client.limit, "saldo": client.balance},
-        status_code=status.HTTP_200_OK,
-    )
+        await db.transactions.add(new_model=transaction)
+    return ORJSONResponse({"limite": client.limit, "saldo": client.balance})
 
 
 @router.get(
     "/{id}/extrato",
     status_code=status.HTTP_200_OK,
-    response_model=QueryTransactionsResponse,
     response_class=ORJSONResponse,
 )
 async def list_transactions(
@@ -67,12 +60,17 @@ async def list_transactions(
     db: DBSessionDep,
 ):
     async with db:
-        client = await db.clients.get(client_id=id, with_transactions=True)
+        client = await db.clients.get(id=id, with_transactions=True)
 
     balance = BalanceDTO(total=client.balance, limit=client.limit)
     transactions = tuple(
-        TransactionsDTO.model_validate(transaction)
+        TransactionsDTO.model_validate(transaction).model_dump(by_alias=True)
         for transaction in client.transactions
     )
 
-    return QueryTransactionsResponse(balance=balance, recent_transactions=transactions)
+    return ORJSONResponse(
+        {
+            "saldo": balance.model_dump(by_alias=True),
+            "ultimas_transacoes": transactions,
+        }
+    )

@@ -30,6 +30,7 @@ testcontainers = {extras = ["postgres"], version = "^3.7.1"}
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.2.1"
 pyinstrument = "^4.6.2"
+mypy = "^1.8.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -10,15 +10,15 @@ services:
       dockerfile: ./Dockerfile.dev
     hostname: api01
     environment:
-      - RINHA_DEBUG=True
-      - RINHA_ECHO_SQL=True
+      - RINHA_DEBUG=False
+      - RINHA_ECHO_SQL=False
       - RINHA_DB__DB_NAME=rinha
       - RINHA_DB__DB_USER=rinha
       - RINHA_DB__DB_PASSWORD=rinha
       - RINHA_DB__DB_HOST=db
       - RINHA_DB__DB_PORT=5432
-      - RINHA_DB__DB_POOL_SIZE=50
-      - RINHA_DB__DB_MAX_OVERFLOW=10
+      - RINHA_DB__DB_POOL_SIZE=30
+      - RINHA_DB__DB_MAX_OVERFLOW=0
       - RINHA_DB__DB_POOL_TIMEOUT=30
     # Não é necessário expor qualquer porta além da porta do load balancer,
     # mas é comum as pessoas o fazerem para testarem suas APIs e conectarem
@@ -68,7 +68,7 @@ services:
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
           cpus: "0.4"
-          memory: "230MB"
+          memory: "330MB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --dbname=rinha --username=rinha"]
       interval: 2s
