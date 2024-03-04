@@ -15,8 +15,8 @@ services:
       - RINHA_DB__DB_PASSWORD=rinha
       - RINHA_DB__DB_HOST=db
       - RINHA_DB__DB_PORT=5432
-      - RINHA_DB__DB_POOL_SIZE=35
-      - RINHA_DB__DB_MAX_OVERFLOW=10
+      - RINHA_DB__DB_POOL_SIZE=10
+      - RINHA_DB__DB_MAX_OVERFLOW=40
       - RINHA_DB__DB_POOL_TIMEOUT=30
     # Não é necessário expor qualquer porta além da porta do load balancer,
     # mas é comum as pessoas o fazerem para testarem suas APIs e conectarem
