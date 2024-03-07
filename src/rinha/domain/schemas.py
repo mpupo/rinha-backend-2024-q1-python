@@ -39,15 +39,15 @@ class ClientSchema(BaseModel):
     limit: int
     balance: int
 
-    def update_balance(self, new_balance: int, operation_type: OperationTypes) -> None:
-        value = (
-            new_balance if operation_type == OperationTypes.CREDIT else new_balance * -1
+    def update_balance(self, value: int, operation_type: OperationTypes) -> None:
+        operation_value = (
+            value if operation_type == OperationTypes.CREDIT else value * -1
         )
-        final_balance = self.balance + value
-        if final_balance < (self.limit * -1):
+        new_balance = self.balance + operation_value
+        if new_balance < (self.limit * -1):
             raise ValueError("Valor informado está acima do limite.")
-        self.balance = final_balance
+        self.balance = new_balance
 
 
 class ClientSchemaWithTransactions(ClientSchema):
-    transactions: list[TransactionSchema] | None = []
+    transactions: list[TransactionSchema] = []

@@ -16,6 +16,8 @@ RUN poetry install --without dev,tests --no-root --no-ansi --no-interaction
 
 FROM python:3.12.0-alpine as runtime
 
+LABEL maintainer="Murilo Pupo de Oliveira <murilo.pupo@ymail.com>"
+
 ARG HOSTNAME
 
 WORKDIR /app
@@ -41,4 +43,4 @@ RUN addgroup -S python && \
 
 EXPOSE 8080
 
-CMD ["uvicorn", "src.rinha.main:app", "--proxy-headers" , "--forwarded-allow-ips", "*",  "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+CMD ["uvicorn", "src.rinha.main:app", "--proxy-headers" , "--forwarded-allow-ips", "*",  "--host", "0.0.0.0", "--port", "8080", "--workers", "1", "--uds",  "/app/sockets/api1.sock"]

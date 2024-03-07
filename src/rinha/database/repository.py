@@ -1,6 +1,6 @@
 from abc import ABC
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -19,12 +19,19 @@ class Repository(ABC):
 
 class ClientRepository(Repository):
     async def update(self, client: ClientSchema) -> None:
-        model = ClientModel(**client.model_dump())
-        await self.db.merge(model)
+        # Removed the code below because it increased the RAM consumption.
+        # model = ClientModel(**client.model_dump())
+        # await self.db.merge(model)
+        stmt = (
+            update(ClientModel)
+            .where(ClientModel.id == client.id)
+            .values(balance=client.balance)
+        )
+        await self.db.execute(stmt)
 
     async def get(
         self, id: int, with_transactions: bool = False
-    ) -> ClientSchemaWithTransactions:
+    ) -> ClientSchema | ClientSchemaWithTransactions:
         if with_transactions:
             query = (
                 select(ClientModel)
@@ -38,7 +45,10 @@ class ClientRepository(Repository):
         return (
             ClientSchemaWithTransactions.model_validate(model)
             if with_transactions
-            else ClientSchema.model_validate(model)
+            else ClientSchema.model_construct(
+                _fields_set={"id", "limit", "balance"},
+                **{"id": model.id, "limit": model.limit, "balance": model.balance},
+            )
         )
 
 

@@ -12,3 +12,4 @@ CREATE UNLOGGED TABLE transacoes (
      descricao varchar(40) NOT NULL CHECK (descricao <> ''),
      realizada_em timestamp with time zone DEFAULT current_timestamp
 );
+CREATE INDEX idx_transacoes_cliente_id ON transacoes (cliente_id ASC);

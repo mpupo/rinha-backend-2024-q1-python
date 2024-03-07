@@ -70,7 +70,7 @@ services:
       resources:
         limits:
           cpus: "0.10"
-          memory: "25MB"
+          memory: "15MB"
   db:
     image: postgres:latest
     hostname: db
@@ -93,7 +93,7 @@ services:
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
           cpus: "0.4"
-          memory: "325MB"
+          memory: "335MB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --dbname=rinha --username=rinha"]
       interval: 2s
