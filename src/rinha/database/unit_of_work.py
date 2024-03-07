@@ -50,11 +50,10 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         session_kwargs: dict[str, object] = {},
     ):
         engine_params = {
-            "echo": False,  # "debug" if echo_sql else echo_sql,
+            "echo": False,
             "future": True,
-            # "isolation_level": "REPEATABLE READ",
             "pool_size": settings.DB_POOL_SIZE,
-            "echo_pool": False,  # "debug" if echo_pool else echo_pool,
+            "echo_pool": False,
             "max_overflow": settings.DB_MAX_OVERFLOW,
             "pool_timeout": settings.DB_POOL_TIMEOUT,
             "pool_pre_ping": settings.DB_POOL_PREPING,
@@ -74,10 +73,11 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             )
             cls.initialized = True
 
-        if echo_pool or echo_sql:
-            # Much better than echo and echo_pool from engine params:
-            for module in ["sqlalchemy.pool", "sqlalchemy.engine"]:
-                logging.getLogger(module).setLevel(logging.DEBUG)
+        # Much better than echo and echo_pool from engine params:
+        if echo_sql:
+            logging.getLogger("sqlalchemy.engine").setLevel(logging.DEBUG)
+        if echo_pool:
+            logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
 
     @classmethod
     async def dispose(cls) -> None:

@@ -40,7 +40,7 @@ async def create_transaction(
         client = await db.clients.get(id=id)
         try:
             client.update_balance(
-                new_balance=transaction.value,
+                value=transaction.value,
                 operation_type=request.type,
             )
         except ValueError:
@@ -64,7 +64,10 @@ async def list_transactions(
 
     balance = BalanceDTO(total=client.balance, limit=client.limit)
     transactions = tuple(
-        TransactionsDTO.model_validate(transaction).model_dump(by_alias=True)
+        TransactionsDTO.model_construct(
+            _field_set=transaction.model_fields_set,
+            **transaction.model_dump(by_alias=True),
+        ).model_dump(by_alias=True)
         for transaction in client.transactions
     )
 

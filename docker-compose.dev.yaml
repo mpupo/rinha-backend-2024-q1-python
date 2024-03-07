@@ -7,37 +7,49 @@ services:
     #image: ana/minha-api-matadora:latest
     build:
       context: .
-      dockerfile: ./Dockerfile.dev
+      dockerfile: ./Dockerfile
     hostname: api01
     environment:
-      - RINHA_DEBUG=False
-      - RINHA_ECHO_SQL=False
       - RINHA_DB__DB_NAME=rinha
       - RINHA_DB__DB_USER=rinha
       - RINHA_DB__DB_PASSWORD=rinha
       - RINHA_DB__DB_HOST=db
       - RINHA_DB__DB_PORT=5432
-      - RINHA_DB__DB_POOL_SIZE=30
-      - RINHA_DB__DB_MAX_OVERFLOW=0
+      - RINHA_DB__DB_POOL_SIZE=10
+      - RINHA_DB__DB_MAX_OVERFLOW=40
       - RINHA_DB__DB_POOL_TIMEOUT=30
+      - RINHA_ECHO_SQL=True
+      - RINHA_DEBUG=True
     # Não é necessário expor qualquer porta além da porta do load balancer,
     # mas é comum as pessoas o fazerem para testarem suas APIs e conectarem
     # ao banco de dados na fase de desenvolvimento.
     ports:
       - "18081:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     deploy:
       resources:
         limits:
           cpus: "0.50"
           memory: "100MB"
+    volumes:
+      - ./sockets:/app/sockets:rw
+    command: "uvicorn src.rinha.main:app --proxy-headers --forwarded-allow-ips * --host 0.0.0.0 --port 8080 --workers 1 --uds /app/sockets/api1.sock"
+    healthcheck:
+      test: test -S /app/sockets/api1.sock || exit 1
+      interval: 2s
+      start_period: 10s
+      timeout: 5s
+      retries: 30
   nginx:
     image: nginx:latest
     volumes:
-      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./sockets:/tmp/sockets:rw
     depends_on:
-      - api01
+      api01:
+        condition: service_healthy
     ports:
         # Obrigatório expor/usar a porta 9999 no load balancer!
       - "9999:9999"
@@ -45,7 +57,7 @@ services:
       resources:
         limits:
           cpus: "0.10"
-          memory: "20MB"
+          memory: "25MB"
   db:
     image: postgres:latest
     hostname: db
@@ -68,7 +80,7 @@ services:
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
           cpus: "0.4"
-          memory: "330MB"
+          memory: "325MB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --dbname=rinha --username=rinha"]
       interval: 2s
@@ -77,7 +89,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     environment:
-      PGADMIN_DEFAULT_EMAIL: "rinha"
+      PGADMIN_DEFAULT_EMAIL: "rinha@rinha.com"
       PGADMIN_DEFAULT_PASSWORD: "rinha"
     ports:
       - "8080:80"

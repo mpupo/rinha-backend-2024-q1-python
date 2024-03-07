@@ -12,9 +12,13 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
-RUN poetry install --without tests --no-root --no-ansi --no-interaction
+RUN poetry install --without dev,tests --no-root --no-ansi --no-interaction
 
 FROM python:3.12.0-alpine as runtime
+
+LABEL maintainer="Murilo Pupo de Oliveira <murilo.pupo@ymail.com>"
+
+ARG HOSTNAME
 
 WORKDIR /app
 
@@ -27,10 +31,16 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY ./src ./src
 
-RUN addgroup -S python && adduser -S python -G python && chown -R python:python /app
+RUN addgroup -S python && \
+    adduser -S python -G python && \
+    chown python:python /app && \
+    mkdir /app/sockets && \
+    touch /app/sockets/${HOSTNAME}.sock && \
+    chown python:python /app/sockets && \
+    chmod 666 /app/sockets/${HOSTNAME}.sock
 
-USER python
+#USER python
 
 EXPOSE 8080
 
-CMD ["uvicorn", "src.rinha.main:app", "--proxy-headers" , "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "src.rinha.main:app", "--proxy-headers" , "--forwarded-allow-ips", "*",  "--host", "0.0.0.0", "--port", "8080", "--workers", "1", "--uds",  "/app/sockets/api1.sock"]

@@ -149,3 +149,14 @@ class TestClientesAPI:
             assert_date_includes_timezone(transacao["realizada_em"], settings.TIMEZONE)
             for transacao in data["ultimas_transacoes"]
         )
+
+        latest_transactions = (
+            await async_db.execute(
+                sa.select(TransactionModel)
+                .filter(TransactionModel.client_id == 1)
+                .order_by(sa.desc(TransactionModel.id))
+            )
+        ).all()
+
+        assert latest_transactions is not None
+        assert len(latest_transactions) == 11
