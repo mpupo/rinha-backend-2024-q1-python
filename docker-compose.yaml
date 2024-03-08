@@ -8,12 +8,15 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+      args:
+        HOSTNAME: api01
+        UVICORN_PORT: 8080
     hostname: api01
     environment:
       - RINHA_DB__DB_NAME=rinha
       - RINHA_DB__DB_USER=rinha
       - RINHA_DB__DB_PASSWORD=rinha
-      - RINHA_DB__DB_HOST=db
+      - RINHA_DB__DB_HOST=/var/run/postgresql
       - RINHA_DB__DB_PORT=5432
       - RINHA_DB__DB_POOL_SIZE=10
       - RINHA_DB__DB_MAX_OVERFLOW=40
@@ -32,32 +35,22 @@ services:
           cpus: "0.50"
           memory: "100MB"
     volumes:
-      - ./sockets:/app/sockets:rw
-    command: "uvicorn src.rinha.main:app --proxy-headers --forwarded-allow-ips * --host 0.0.0.0 --port 8080 --workers 1 --uds /app/sockets/api1.sock"
-    healthcheck:
-      test: test -S /app/sockets/api1.sock || exit 1
-      interval: 2s
-      start_period: 10s
-      timeout: 5s
-      retries: 30
+      - sockets:/var/run/rinha:rw
+      - postgres:/var/run/postgresql:rw
   api02:
     # Essa sintaxe reusa o que foi declarado em 'api01'.
     <<: *api
+    build:
+      args:
+        HOSTNAME: api02
     hostname: api02
     ports:
       - "18082:8080"
-    command: "uvicorn src.rinha.main:app --proxy-headers --forwarded-allow-ips * --host 0.0.0.0 --port 8080 --workers 1 --uds /app/sockets/api2.sock"
-    healthcheck:
-      test: test -S /app/sockets/api2.sock || exit 1
-      interval: 2s
-      start_period: 10s
-      timeout: 5s
-      retries: 30
   nginx:
     image: nginx:latest
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./sockets:/tmp/sockets:rw
+      - sockets:/var/run/rinha:rw
     depends_on:
       api01:
         condition: service_healthy
@@ -84,6 +77,7 @@ services:
       - ./postgresql/ddl.sql:/docker-entrypoint-initdb.d/ddl.sql
       - ./postgresql/dml.sql:/docker-entrypoint-initdb.d/dml.sql
       - ./postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
+      - postgres:/var/run/postgresql:rw
     command: postgres -c "config_file=/etc/postgresql/postgresql.conf"
     deploy:
       resources:
@@ -110,3 +104,7 @@ networks:
   default:
     driver: bridge
     name: rinha-nginx-2024q1
+
+volumes:
+  sockets:
+  postgres:

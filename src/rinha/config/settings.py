@@ -17,6 +17,9 @@ class PostgresSettings(BaseSettings):
     @computed_field
     @property
     def db_url(self) -> str:
+        unix_socket = self.DB_HOST.startswith("/")
+        if unix_socket:
+            return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@/{self.DB_NAME}?host={self.DB_HOST}"
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 
