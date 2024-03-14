@@ -47,3 +47,8 @@ docker-test:
 docker-dev:
 	docker-compose -f docker-compose.dev.yaml down --rmi local --volumes
 	docker-compose -f docker-compose.dev.yaml up --build --force-recreate
+
+.PHONY: docker-sub
+docker-sub:
+	docker-compose -f docker-compose.submission.yaml down --rmi local --volumes
+	docker-compose -f docker-compose.submission.yaml up --build --force-recreate
