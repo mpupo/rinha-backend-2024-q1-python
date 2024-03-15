@@ -25,7 +25,15 @@ Rodar os testes seguindo os passos descritos em:
 - [repositório da rinha](https://github.com/zanfranceschi/rinha-de-backend-2024-q1)
 - [repositório da rinha backup](https://github.com/mpupo/rinha-de-backend-2024-q1)
 
-![resultados](docs/rinhabackendcrebitossimulation-20240308221440508/image.png)
+#### Resultado local
+![resultado-local](docs/rinhabackendcrebitossimulation-20240308221440508-local/image.png)
+
+#### Resultado oficial
+Os critérios foram especificados [aqui](https://github.com/zanfranceschi/rinha-de-backend-2024-q1/blob/main/RESULTADOS.md).
+
+![resultado-oficial-gatling](docs/rinhabackendcrebitossimulation-20240308225939098-official/image.png)
+
+![resultado-oficial-penalidades](docs/resultado-oficial-criterios.png)
 
 ## Aprendizados
 ### 1. Gerenciamento de conexões com o banco de dados
