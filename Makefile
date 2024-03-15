@@ -52,3 +52,8 @@ docker-dev:
 docker-sub:
 	docker-compose -f docker-compose.submission.yaml down --rmi local --volumes
 	docker-compose -f docker-compose.submission.yaml up --build --force-recreate
+
+.PHONY: docker-push
+docker-push:
+	docker buildx build --platform linux/amd64 -t mpupolv/rinha-backend-2024-q1-python:latest .
+	docker push mpupolv/rinha-backend-2024-q1-python:latest
